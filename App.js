@@ -1,4 +1,3 @@
-// Added Dynamic Graphs
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, ScrollView, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,7 +7,7 @@ import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import AddExpenseScreen from './components/AddExpenseScreen';
-import { askAI, warmUpAI } from './utils/askAi'; // merged import for both
+//import { askAI, warmUpAI } from './utils/askAi'; // merged import for both
 import { Button } from 'react-native';
 import { ActivityIndicator } from 'react-native';
 import { TouchableOpacity } from 'react-native';
@@ -27,7 +26,7 @@ const MyTheme = {
 };
 
 function TrackerScreen({ expenses, setExpenses }) {
-  const [period, setPeriod] = useState('Monthly');
+  const [timeAmount, setTimeAmount] = useState('Monthly');
   const [budgets, setBudgets] = useState({ Weekly: '', Monthly: '', Yearly: '' });
 
   const handleAddExpense = (expense) => {
@@ -38,42 +37,46 @@ function TrackerScreen({ expenses, setExpenses }) {
   const filteredExpenses = expenses.filter((expense) => {
     const now = new Date();
     const eDate = new Date(expense.date);
-    if (period === 'Weekly') {
+    if (timeAmount === 'Weekly') {
       const oneWeekAgo = new Date(now);
       oneWeekAgo.setDate(now.getDate() - 7);
       return eDate >= oneWeekAgo;
-    } else if (period === 'Monthly') {
+    } else if (timeAmount === 'Monthly') {
       return (
         eDate.getMonth() === now.getMonth() &&
         eDate.getFullYear() === now.getFullYear()
       );
-    } else if (period === 'Yearly') {
+    } else if (timeAmount === 'Yearly') {
       return eDate.getFullYear() === now.getFullYear();
     }
     return true;
   });
 
   const totalSpent = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
-  const budget = budgets[period];
-  const remaining = budget !== '' ? (parseFloat(budget) - totalSpent).toFixed(2) : null;
+  const budget = budgets[timeAmount];
+  let remaining = null;
+  if (budget !== '') {
+    remaining = (Number(budget) - totalSpent).toFixed(2);
+  }
+
 
 
   useEffect(() => {
     if (budget !== '' && totalSpent > parseFloat(budget)) {
       Alert.alert(
         'Budget Limit Reached',
-        `You've exceeded your ${period.toLowerCase()} budget of $${budget}.`
+        `You've exceeded your ${timeAmount.toLowerCase()} budget of $${budget}.`
       );
     }
-  }, [budget, totalSpent, period]);
+  }, [budget, totalSpent, timeAmount]);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#CAEEC2' }}>
       <ScrollView contentContainerStyle={styles.curvedContainer}>
         <Text style={styles.sectionTitle}>Tracking Period</Text>
         <Picker
-          selectedValue={period}
-          onValueChange={(value) => setPeriod(value)}
+          selectedValue={timeAmount}
+          onValueChange={(value) => setTimeAmount(value)}
           style={styles.picker}
         >
           <Picker.Item label="Weekly" value="Weekly" />
@@ -83,56 +86,54 @@ function TrackerScreen({ expenses, setExpenses }) {
 
         <AddExpenseScreen onAddExpense={handleAddExpense} />
 
-        <Text style={styles.sectionTitle}>Set Budget for {period}:</Text>
+        <Text style={styles.sectionTitle}>Set Budget for {timeAmount}:</Text>
         <TextInput
           style={styles.input}
           keyboardType="numeric"
-          value={budget[period]}
-          onChangeText={(val) => setBudgets({ ...budgets, [period]: val })}
+          value={budget[timeAmount]}
+          onChangeText={(val) => setBudgets({ ...budgets, [timeAmount]: val })}
           placeholder="e.g. 200"
         />
-
-        {remaining !== null && (
-          <Text style={styles.remaining}>Remaining: ${remaining}</Text>
-        )}
-
-        
+        {remaining !== null && (<Text style={styles.remaining}>Remaining: ${remaining}</Text>)}
       </ScrollView>
     </View>
   );
 }
 
 function GraphsScreen({ expenses }) {
-  const [period, setPeriod] = useState('Weekly');
+  const [timeAmount, setTimeAmount] = useState('Weekly');
   const now = new Date();
   const groupedExpenses =
-    period === 'Monthly'
+    timeAmount === 'Monthly'
       ? Array(31).fill(0)
-      : period === 'Yearly'
+      : timeAmount === 'Yearly'
       ? Array(12).fill(0)
       : Array(7).fill(0);
 
   expenses.forEach((expense) => {
     const date = new Date(expense.date);
-    if (period === 'Weekly') {
+    if (timeAmount === 'Weekly') {
       const day = date.getDay();
       groupedExpenses[day] += expense.amount;
-    } else if (period === 'Monthly') {
+    } else if (timeAmount === 'Monthly') {
       const day = date.getDate();
       const weekIndex = Math.min(Math.floor((day - 1) / 7), 3);
       groupedExpenses[weekIndex] += expense.amount;
-    } else if (period === 'Yearly') {
+    } else if (timeAmount === 'Yearly') {
       const month = date.getMonth();
       groupedExpenses[month] += expense.amount;
     }
   });
 
-  const labels =
-    period === 'Weekly'
-      ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-      : period === 'Monthly'
-      ? ['Week 1', 'Week 2', 'Week 3', 'Week 4']
-      : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  let labels = [];
+  if (period === 'Weekly') {
+    labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  } else if (period === 'Monthly') {
+    labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+  } else {
+    labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  }
+
 
   const screenWidth = Dimensions.get('window').width - 30;
 
@@ -140,8 +141,8 @@ function GraphsScreen({ expenses }) {
     <ScrollView contentContainerStyle={styles.curvedContainer}>
       <Text style={styles.sectionTitle}>Graph View</Text>
       <Picker
-        selectedValue={period}
-        onValueChange={(value) => setPeriod(value)}
+        selectedValue={timeAmount}
+        onValueChange={(value) => setTimeAmount(value)}
         style={styles.picker}
       >
         <Picker.Item label="Weekly" value="Weekly" />
@@ -177,9 +178,14 @@ function InsightsScreen({ expenses, setExpenses }) {
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState('');
 
-  const total = expenses.reduce((sum, e) => sum + e.amount, 0);
-  const highest = expenses.reduce((max, e) => (e.amount > max ? e.amount : max), 0);
+  let total = 0;
+  let highest = 0;
+  expenses.forEach(e => {
+    total += e.amount;
+    if (e.amount > highest) highest = e.amount;
+  });
   const average = expenses.length ? (total / expenses.length).toFixed(2) : 0;
+
 
   const addTodo = () => {
     if (!newTodo.trim()) return;
@@ -203,8 +209,6 @@ function InsightsScreen({ expenses, setExpenses }) {
         <Text style={styles.metric}>📊 Average Expense: ${average}</Text>
         <Text style={styles.metric}>🏷️ Highest Expense: ${highest.toFixed(2)}</Text>
       </View>
-
-      {/* --- To-Do Section --- */}
       <Text style={styles.sectionTitle}>To-Do Checklist</Text>
       <View style={styles.todoInputRow}>
         <TextInput
@@ -229,7 +233,6 @@ function InsightsScreen({ expenses, setExpenses }) {
         ))
       )}
 
-      {/* --- Saved Expenses Section --- */}
       <Text style={[styles.sectionTitle, { marginTop: 25 }]}>Saved Expenses</Text>
       {expenses.length === 0 ? (
         <Text style={styles.emptyText}>No expenses saved yet</Text>
@@ -296,9 +299,9 @@ export default function App() {
   const [expenses, setExpenses] = useState([]);
 
   //useEffect warm-up for AI
-  useEffect(() => {
-    warmUpAI();
-  }, []);
+  //useEffect(() => {
+  //  warmUpAI();
+  //}, []);
 
   return (
     <NavigationContainer theme={MyTheme}>
