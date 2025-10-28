@@ -1,3 +1,4 @@
+//cd "%USERPROFILE%\Documents\ExpenseTracker"
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, ScrollView, StyleSheet, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -15,15 +16,13 @@ import { TouchableOpacity } from 'react-native';
 
 const Tab = createBottomTabNavigator();
 
-const MyTheme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
+const MyTheme = Object.assign({}, DefaultTheme, {
+  colors: Object.assign({}, DefaultTheme.colors, {
     background: '#CAEEC2',
     card: '#CAEEC2',
     border: '#fffffeff'
-  }
-};
+  })
+});
 
 function TrackerScreen({ expenses, setExpenses }) {
   const [timeAmount, setTimeAmount] = useState('Monthly');
@@ -34,7 +33,7 @@ function TrackerScreen({ expenses, setExpenses }) {
     setExpenses([...expenses, newExpense]);
   };
 
-  const filteredExpenses = expenses.filter((expense) => {
+  const filteredExpenses = expenses.filter(function (expense){
     const now = new Date();
     const eDate = new Date(expense.date);
     if (timeAmount === 'Weekly') {
@@ -43,8 +42,7 @@ function TrackerScreen({ expenses, setExpenses }) {
       return eDate >= oneWeekAgo;
     } else if (timeAmount === 'Monthly') {
       return (
-        eDate.getMonth() === now.getMonth() &&
-        eDate.getFullYear() === now.getFullYear()
+        eDate.getMonth() === now.getMonth() && eDate.getFullYear() === now.getFullYear()
       );
     } else if (timeAmount === 'Yearly') {
       return eDate.getFullYear() === now.getFullYear();
@@ -52,7 +50,11 @@ function TrackerScreen({ expenses, setExpenses }) {
     return true;
   });
 
-  const totalSpent = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const firstVal = 0;
+  const totalSpent = filteredExpenses.reduce(function(sum, e){
+    return sum + e.amount;
+  }, firstVal);
+
   const budget = budgets[timeAmount];
   let remaining = null;
   if (budget !== '') {
@@ -61,16 +63,13 @@ function TrackerScreen({ expenses, setExpenses }) {
 
 
 
-  useEffect(() => {
+  useEffect(function(){
     if (budget !== '' && totalSpent > parseFloat(budget)) {
-      Alert.alert(
-        'Budget Limit Reached',
-        `You've exceeded your ${timeAmount.toLowerCase()} budget of $${budget}.`
-      );
+      Alert.alert('Budget Exceeded', "You've exceeded your " + timeAmount.Amount.toLowerCase() + "budget of $" + budget + ".");
     }
   }, [budget, totalSpent, timeAmount]);
 
-  return (
+    return (
     <View style={{ flex: 1, backgroundColor: '#CAEEC2' }}>
       <ScrollView contentContainerStyle={styles.curvedContainer}>
         <Text style={styles.sectionTitle}>Tracking Period</Text>
@@ -103,32 +102,34 @@ function TrackerScreen({ expenses, setExpenses }) {
 function GraphsScreen({ expenses }) {
   const [timeAmount, setTimeAmount] = useState('Weekly');
   const now = new Date();
-  const groupedExpenses =
-    timeAmount === 'Monthly'
-      ? Array(31).fill(0)
-      : timeAmount === 'Yearly'
-      ? Array(12).fill(0)
-      : Array(7).fill(0);
+  let combinedExpenses;
+  if (timeAmount === 'Monthly') {
+    combinedExpenses = Array(31).fill(0);
+  } else if (timeAmount === 'Yearly') {
+    combinedExpenses = Array(12).fill(0);
+  } else {
+    combinedExpenses = Array(7).fill(0);
+  }
 
-  expenses.forEach((expense) => {
+  expenses.forEach(function(expense){
     const date = new Date(expense.date);
     if (timeAmount === 'Weekly') {
       const day = date.getDay();
-      groupedExpenses[day] += expense.amount;
+      combinedExpenses[day] += expense.amount;
     } else if (timeAmount === 'Monthly') {
       const day = date.getDate();
       const weekIndex = Math.min(Math.floor((day - 1) / 7), 3);
-      groupedExpenses[weekIndex] += expense.amount;
+      combinedExpenses[weekIndex] += expense.amount;
     } else if (timeAmount === 'Yearly') {
       const month = date.getMonth();
-      groupedExpenses[month] += expense.amount;
+      combinedExpenses[month] += expense.amount;
     }
   });
 
   let labels = [];
-  if (period === 'Weekly') {
+  if (timeAmount === 'Weekly') {
     labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  } else if (period === 'Monthly') {
+  } else if (timeAmount === 'Monthly') {
     labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
   } else {
     labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -137,7 +138,7 @@ function GraphsScreen({ expenses }) {
 
   const screenWidth = Dimensions.get('window').width - 30;
 
-  return (
+    return (
     <ScrollView contentContainerStyle={styles.curvedContainer}>
       <Text style={styles.sectionTitle}>Graph View</Text>
       <Picker
@@ -153,7 +154,7 @@ function GraphsScreen({ expenses }) {
       <LineChart
         data={{
           labels: labels,
-          datasets: [{ data: groupedExpenses.slice(0, labels.length) }],
+          datasets: [{ data: combinedExpenses.slice(0, labels.length) }],
         }}
         width={screenWidth}
         height={220}
@@ -167,7 +168,7 @@ function GraphsScreen({ expenses }) {
           labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
           style: { borderRadius: 16 },
         }}
-        bezier
+        bezier 
         style={{ marginVertical: 10, borderRadius: 10 }}
       />
     </ScrollView>
@@ -180,34 +181,40 @@ function InsightsScreen({ expenses, setExpenses }) {
 
   let total = 0;
   let highest = 0;
-  expenses.forEach(e => {
+  expenses.forEach(function(e) {
     total += e.amount;
     if (e.amount > highest) highest = e.amount;
   });
   const average = expenses.length ? (total / expenses.length).toFixed(2) : 0;
 
 
-  const addTodo = () => {
+  function addTodo() {
     if (!newTodo.trim()) return;
-    setTodos([...todos, { id: Date.now().toString(), text: newTodo }]);
+    const newTodos = todos.concat({ id: Date.now().toString(), text: newTodo });
+    setTodos(newTodos);
     setNewTodo('');
-  };
+  }
 
-  const removeTodo = (id) => {
-    setTodos(todos.filter((t) => t.id !== id));
-  };
+  function removeTodo(id) {
+    const filtered = todos.filter(function (t) {
+      return t.id !== id;
+    });
+    setTodos(filtered);
+  }
 
-  const removeExpense = (id) => {
-    setExpenses(expenses.filter((e) => e.id !== id));
-  };
+  function removeExpense(id) {
+    const filtered = expenses.filter(function (e) {
+      return e.id !== id;
+    });
+    setExpenses(filtered);
+  }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Insights</Text>
+    <ScrollView contentContainerStyle={styles.curvedContainer}>
       <View style={styles.card}>
-        <Text style={styles.metric}>💰 Total Spent: ${total.toFixed(2)}</Text>
-        <Text style={styles.metric}>📊 Average Expense: ${average}</Text>
-        <Text style={styles.metric}>🏷️ Highest Expense: ${highest.toFixed(2)}</Text>
+        <Text style={styles.metric}>Total Spent: ${total.toFixed(2)}</Text>
+        <Text style={styles.metric}>Average Expense: ${average}</Text>
+        <Text style={styles.metric}>Highest Expense: ${highest.toFixed(2)}</Text>
       </View>
       <Text style={styles.sectionTitle}>To-Do Checklist</Text>
       <View style={styles.todoInputRow}>
@@ -220,34 +227,30 @@ function InsightsScreen({ expenses, setExpenses }) {
         <Button title="Add" onPress={addTodo} />
       </View>
 
-      {todos.length === 0 ? (
-        <Text style={styles.emptyText}>No tasks yet</Text>
-      ) : (
-        todos.map((t) => (
+      {todos.length === 0 ? <Text style={styles.emptyText}>No tasks yet</Text> : null}
+      {todos.map(function (t){
+        return (
           <View key={t.id} style={styles.todoCard}>
             <Text style={styles.todoText}>{t.text}</Text>
-            <TouchableOpacity onPress={() => removeTodo(t.id)} style={styles.removeButton}>
+            <TouchableOpacity onPress={function () { removeTodo(t.id); }} style={styles.removeButton}>
               <Text style={styles.removeText}>Remove</Text>
             </TouchableOpacity>
           </View>
-        ))
-      )}
+        );
+      })}
 
       <Text style={[styles.sectionTitle, { marginTop: 25 }]}>Saved Expenses</Text>
-      {expenses.length === 0 ? (
-        <Text style={styles.emptyText}>No expenses saved yet</Text>
-      ) : (
-        expenses.map((e) => (
+      {expenses.length === 0 ? <Text style={styles.emptyText}>No expenses saved yet</Text> : null}
+      {expenses.map(function (e) {
+        return (
           <View key={e.id} style={styles.expenseCard}>
-            <Text style={styles.expenseText}>
-              {new Date(e.date).toDateString()} - ${e.amount.toFixed(2)} @ {e.store}
-            </Text>
-            <TouchableOpacity onPress={() => removeExpense(e.id)} style={styles.removeButton}>
+            <Text style={styles.expenseText}>{new Date(e.date).toDateString()} - ${e.amount.toFixed(2)} @ {e.store}</Text>
+            <TouchableOpacity onPress={function () { removeExpense(e.id); }} style={styles.removeButton}>
               <Text style={styles.removeText}>Remove</Text>
             </TouchableOpacity>
           </View>
-        ))
-      )}
+        );
+      })}
     </ScrollView>
   );
 }
@@ -273,7 +276,6 @@ function AISuggestionsScreen() {
   return (
     <ScrollView contentContainerStyle={styles.curvedContainer}>
       <Text style={styles.sectionTitle}>Ask AI a Question</Text>
-
       <TextInput
         style={[styles.input, { height: 100, textAlignVertical: 'top', marginBottom: 10 }]}
         placeholder="e.g. Where can I save more money this week?"
