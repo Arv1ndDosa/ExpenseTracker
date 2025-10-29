@@ -1,14 +1,12 @@
 //cd "%USERPROFILE%\Documents\ExpenseTracker"
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, ScrollView, StyleSheet, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { LineChart } from 'react-native-chart-kit';
 import { Dimensions } from 'react-native';
 import AddExpenseScreen from './components/AddExpenseScreen';
-//import { askAI, warmUpAI } from './utils/askAi'; // merged import for both
 import { Button } from 'react-native';
 import { ActivityIndicator } from 'react-native';
 import { TouchableOpacity } from 'react-native';
@@ -299,12 +297,6 @@ function AISuggestionsScreen() {
 
 export default function App() {
   const [expenses, setExpenses] = useState([]);
-
-  //useEffect warm-up for AI
-  //useEffect(() => {
-  //  warmUpAI();
-  //}, []);
-
   return (
     <NavigationContainer theme={MyTheme}>
       <Tab.Navigator

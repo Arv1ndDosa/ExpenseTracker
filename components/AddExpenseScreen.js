@@ -104,7 +104,6 @@ export default function AddExpenseScreen({ onAddExpense }) {
       date,
     };
     onAddExpense(expense);
-
     setAmount('');
     setStoreInput('');
     setDate(new Date());
@@ -113,7 +112,6 @@ export default function AddExpenseScreen({ onAddExpense }) {
 
   return (
     <View style={styles.container}>
-
       <Text style={styles.label}>Amount</Text>
       <TextInput
         style={styles.input}
