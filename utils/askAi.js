@@ -1,92 +1,30 @@
+import axios from "axios";
+const apiEndpoint = " "; // put link of resource name
+const apiKey = " "; // put api key here
+const apiVersion = "2024-10-21"; //confirm if this is the current version
+const modelDeployment = ""; // put deployment name
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// import axios from 'axios';
-// import { HUGGINGFACE_API_KEY } from '@env';
-
-// // You can use a light model like "mistralai/Mistral-7B-Instruct-v0.2" or "google/gemma-2b-it"
-// const MODEL = 'HuggingFaceH4/zephyr-7b-beta';
-
-// // Optional: warm-up call so the model loads faster when the app starts
-// export const warmUpAI = async () => {
-//   try {
-//     console.log('Warming up Hugging Face model...');
-//     const response = await axios.post(
-//       `https://api-inference.huggingface.co/models/${MODEL}`,
-//       { inputs: "Hello" },
-//       { headers: { Authorization: `Bearer ${HUGGINGFACE_API_KEY}` }, timeout: 15000 }
-//     );
-//     console.log('Warm-up successful ✅');
-//   } catch (error) {
-//     console.warn('Warm-up failed ❌', error.message);
-//   }
-// };
-
-// export const askAI = async (userMessage) => {
-//   console.log('Sending to Hugging Face:', userMessage);
-
-//   try {
-//     const response = await axios.post(
-//       `https://api-inference.huggingface.co/models/${MODEL}`,
-//       { inputs: userMessage },
-//       {
-//         headers: {
-//           Authorization: `Bearer ${HUGGINGFACE_API_KEY}`,
-//           'Content-Type': 'application/json',
-//         },
-//         timeout: 20000,
-//       }
-//     );
-
-//     // Hugging Face responses vary by model — check both possible formats
-//     const reply =
-//       response.data?.[0]?.generated_text ||
-//       response.data?.generated_text ||
-//       'Sorry, no response from AI.';
-
-//     console.log('AI Response:', reply);
-//     return reply;
-//   } catch (error) {
-//     console.error('AI Error:', error.message);
-//     return 'Sorry, something went wrong. Please try again later.';
-//   }
-// };
+export async function askAI(promptText) {
+  const url = `${apiEndpoint}openai/deployments/${modelDeployment}/chat/completions?api-version=${apiVersion}`;
+  try {
+    const response = await axios.post(url,  //need this to be the place where the request is sent
+      {                                                    
+        messages: [                         //need to make sure that the info is sent
+          { role: "assistant", content: "Hello assistant" },
+          { role: "user", content: promptText },
+        ],
+        max_tokens: 150,   //tokens on subscriptions
+        temperature: 0.6,  //0-1.0 scale and can adjust to change creativity levels
+      },
+      {
+        headers: { //need to set headers
+          "Content-Type": "application/json",
+          "apikey": apiKey,
+        },
+      }
+    );
+    return response.data.choices[0].message.content;  //should take only the ai's response rather than the whole json paragraph
+  } catch (error) {
+    throw new Error("Request failed: " + (error.message || "Unknown error")); //should display this if code doesnt work
+  }
+}
