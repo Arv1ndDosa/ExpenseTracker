@@ -9,6 +9,7 @@ import { Dimensions } from 'react-native';
 import AddExpenseScreen from './components/AddExpenseScreen';
 import { Button } from 'react-native';
 import { ActivityIndicator } from 'react-native';
+import { askAI } from './utils/askAi';
 import { TouchableOpacity } from 'react-native';
 
 
@@ -210,9 +211,9 @@ function InsightsScreen({ expenses, setExpenses }) {
   return (
     <ScrollView contentContainerStyle={styles.curvedContainer}>
       <View style={styles.card}>
-        <Text style={styles.metric}>Total Spent: ${total.toFixed(2)}</Text>
-        <Text style={styles.metric}>Average Expense: ${average}</Text>
-        <Text style={styles.metric}>Highest Expense: ${highest.toFixed(2)}</Text>
+        <Text style={styles.metric}>🏦Total Spent: ${total.toFixed(2)}</Text>
+        <Text style={styles.metric}>💳Average Expense: ${average}</Text>
+        <Text style={styles.metric}>💴Highest Expense: ${highest.toFixed(2)}</Text>
       </View>
       <Text style={styles.sectionTitle}>To-Do Checklist</Text>
       <View style={styles.todoInputRow}>
@@ -258,42 +259,43 @@ function AISuggestionsScreen() {
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleAskAI = async () => {
-    if (!prompt) return;
+  async function handleAskAI() {
+    if (!prompt.trim()) return;
     setLoading(true);
     try {
       const answer = await askAI(prompt);
       setResponse(answer);
-    } catch (err) {
-      setResponse('Error: ' + err.message);
+    } catch (error) {
+      setResponse('Error: ' + (error.message || 'Something went wrong'));
     } finally {
       setLoading(false);
     }
-  };
-
+  }
   return (
     <ScrollView contentContainerStyle={styles.curvedContainer}>
-      <Text style={styles.sectionTitle}>Ask AI a Question</Text>
+      <Text style={[styles.sectionTitle, { color: '#34495e' }]}>Ask AI a Question</Text>
       <TextInput
-        style={[styles.input, { height: 100, textAlignVertical: 'top', marginBottom: 10 }]}
+        style={[
+          styles.input,
+          { height: 100, textAlignVertical: 'top', marginBottom: 10, backgroundColor: '#fff' }
+        ]}
         placeholder="e.g. Where can I save more money this week?"
         value={prompt}
-        onChangeText={setPrompt}
-        multiline
+        onChangeText={function (text) { setPrompt(text); }}
+        multiline={true}
       />
-
-      <Button title="Ask AI" onPress={handleAskAI} disabled={loading || !prompt.trim()} />
-
+      <Button title={loading ? "Thinking..." : "Ask AI"} onPress={handleAskAI} disabled={loading} />
       {loading ? (
         <ActivityIndicator size="large" style={{ marginTop: 20 }} />
       ) : (
-        <Text style={[styles.expenseItem, { marginTop: 20 }]}>
-          {response || 'Response will appear here.'}
+        <Text style={[styles.expenseText, { marginTop: 20, color: '#2c3e50' }]}>
+          {response || 'Here are your responses:'}
         </Text>
       )}
     </ScrollView>
   );
 }
+
 
 export default function App() {
   const [expenses, setExpenses] = useState([]);
