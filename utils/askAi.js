@@ -1,30 +1,25 @@
 import axios from "axios";
-const apiEndpoint = " "; // put link of resource name
-const apiKey = " "; // put api key here
-const apiVersion = "2024-10-21"; //confirm if this is the current version
-const modelDeployment = ""; // put deployment name
-
+const apiEndpoint = "https://expense-tracker-chat-bot.openai.azure.com/";
+const apiKey = "8RDzYxVq5Nguh0ANR0zpwxAf4Ut8kfALEFQZVvdhT6n0FFtHqlkWJQQJ99BJACHYHv6XJ3w3AAABACOG2DbE";
+const apiVersion = "2025-08-07";
+const modelDeployment = "gpt-mini-expensetracker";
+const modelName = "gpt-5-mini";
 export async function askAI(promptText) {
   const url = `${apiEndpoint}openai/deployments/${modelDeployment}/chat/completions?api-version=${apiVersion}`;
+  const headers = { 'Content-Type': 'application/json', 'api-key': apiKey};
+  const body = {
+    model: modelName,
+    messages: [
+      { role: 'Assistant', content: 'Hello Assistant!' },
+      { role: 'user', content: promptText }
+    ],
+    max_tokens: 150,
+    temperature: 0.6
+  };
   try {
-    const response = await axios.post(url,  //need this to be the place where the request is sent
-      {                                                    
-        messages: [                         //need to make sure that the info is sent
-          { role: "assistant", content: "Hello assistant" },
-          { role: "user", content: promptText },
-        ],
-        max_tokens: 150,   //tokens on subscriptions
-        temperature: 0.6,  //0-1.0 scale and can adjust to change creativity levels
-      },
-      {
-        headers: { //need to set headers
-          "Content-Type": "application/json",
-          "apikey": apiKey,
-        },
-      }
-    );
-    return response.data.choices[0].message.content;  //should take only the ai's response rather than the whole json paragraph
-  } catch (error) {
-    throw new Error("Request failed: " + (error.message || "Unknown error")); //should display this if code doesnt work
+    const res = await axios.post(url, body, { headers });
+    return res.data.choices[0].message.content;
+  } catch (e) {
+    throw new Error(e.message || 'Request failed');
   }
 }
