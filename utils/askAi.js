@@ -7,25 +7,24 @@ const deployment = "gpt-mini-expensetracker";
 
 export async function askAI(promptText) {
   const url = `${endpoint}openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`;
-
   const headers = {
     "Content-Type": "application/json",
     "api-key": apiKey,
   };
-
   const body = {
     messages: [
       { role: "system", content: "You are a helpful assistant that gives financial insights." },
-      { role: "user", content: promptText },
+      { role: "user", content: promptText }
     ],
-    max_tokens: 1500,
-    temperature: 0.7,
+    temperature: 1,
+    max_completion_tokens: 1500,
   };
 
   try {
     const response = await axios.post(url, body, { headers });
     return response.data.choices[0].message.content;
   } catch (error) {
-    throw new Error(error.message || "Request failed");
+    console.error("Azure AI Error:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.error?.message || error.message || "Request failed");
   }
 }
