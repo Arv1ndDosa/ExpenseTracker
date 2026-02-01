@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert, ScrollView, Platform } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 const STORES = [
@@ -103,11 +103,16 @@ export default function AddExpenseScreen({ onAddExpense }) {
       store: storeInput,
       date,
     };
+
     onAddExpense(expense);
     setAmount('');
     setStoreInput('');
     setDate(new Date());
     setShowDropdown(false);
+  };
+
+  const handleWebDateChange = (e) => {
+    setDate(new Date(e.target.value));
   };
 
   return (
@@ -151,12 +156,27 @@ export default function AddExpenseScreen({ onAddExpense }) {
         </ScrollView>
       )}
 
-      <View style={styles.dateButton}>
-        <Button title="Pick Date" onPress={() => setShowDatePicker(true)} />
-        <Text style={styles.dateText}>{date.toDateString()}</Text>
-      </View>
+      {Platform.OS === 'web' ? (
+        <input
+          type="date"
+          value={date.toISOString().split('T')[0]}
+          onChange={handleWebDateChange}
+          style={{
+            padding: 10,
+            borderRadius: 8,
+            border: '1px solid #ccc',
+            marginTop: 10,
+            marginBottom: 20
+          }}
+        />
+      ) : (
+        <View style={styles.dateButton}>
+          <Button title="Pick Date" onPress={() => setShowDatePicker(true)} />
+          <Text style={styles.dateText}>{date.toDateString()}</Text>
+        </View>
+      )}
 
-      {showDatePicker && (
+      {showDatePicker && Platform.OS !== 'web' && (
         <DateTimePicker
           value={date}
           mode="date"
@@ -181,13 +201,6 @@ const styles = StyleSheet.create({
     padding: 30,
     justifyContent: 'center',
     backgroundColor: '#eae8e0',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '600',
-    marginBottom: 25,
-    textAlign: 'center',
-    color: '#333',
   },
   label: {
     marginTop: 15,
